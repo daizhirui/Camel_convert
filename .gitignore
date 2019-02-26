@@ -1,0 +1,7 @@
+# gitignore for xcode project
+DerivedData/
+test/
+debug/
+release/
+elf_reference/
+*.tar.gz
