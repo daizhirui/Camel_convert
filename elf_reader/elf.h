@@ -53,19 +53,19 @@ typedef struct {
         with which to decode and interpret the file's contents */
     unsigned char   e_ident[EI_NIDENT];
     Elf32_Half      e_type;         /*! The object file type. */
-    Elf32_Half      e_machine;      /*! This member’s value specifies the required architecture for an individual file. */
+    Elf32_Half      e_machine;      /*! This member's value specifies the required architecture for an individual file. */
     Elf32_Word      e_version;      /*! This member identifies the object file version. */
     Elf32_Addr      e_entry;        /*! This member gives the virtual address to which the system first transfers control, thus
                                      starting the process. If the file has no associated entry point, this member holds zero. */
-    Elf32_Off       e_phoff;        /*! the program header table’s file offset in bytes. */
-    Elf32_Off       e_shoff;        /*! the section header table’s file offset in bytes. */
+    Elf32_Off       e_phoff;        /*! the program header table's file offset in bytes. */
+    Elf32_Off       e_shoff;        /*! the section header table's file offset in bytes. */
     Elf32_Word      e_flags;        /*! This member holds processor-specific flags associated with the file.
                                      Flag names take the form EF_machine_flag. */
-    Elf32_Half      e_ehsize;       /*! This member holds the ELF header’s size in bytes. */
-    Elf32_Half      e_phentsize;    /*! This member holds the size in bytes of one entry in the file’s program header table; all
+    Elf32_Half      e_ehsize;       /*! This member holds the ELF header's size in bytes. */
+    Elf32_Half      e_phentsize;    /*! This member holds the size in bytes of one entry in the file's program header table; all
                                      entries are the same size. */
     Elf32_Half      e_phnum;        /*! This member holds the number of entries in the program header table. */
-    Elf32_Half      e_shentsize;    /*! This member holds a section header’s size in bytes. A section header is one entry in the
+    Elf32_Half      e_shentsize;    /*! This member holds a section header's size in bytes. A section header is one entry in the
                                      section header table; all entries are the same size. */
     Elf32_Half      e_shnum;        /*! holds the number of entries in the section header table. */
     Elf32_Half      e_shstrndx;     /*! This member holds the section header table index of the entry associated with the section
@@ -135,12 +135,12 @@ typedef enum {
 typedef struct {
     Elf32_Word  sh_name;        /*! specifies the name of the section. Its value is an index into the section header string table
                                  section */
-    Elf32_Word  sh_type;        /*! categorizes the section’s contents and semantics, see #SH_TYPE_T */
+    Elf32_Word  sh_type;        /*! categorizes the section's contents and semantics, see #SH_TYPE_T */
     Elf32_Word  sh_flags;       /*! support 1-bit flags that describe miscellaneous attributes, see #SH_FLAG_T */
     Elf32_Addr  sh_addr;        /*! If the section will appear in the memory image of a process, this member gives the address at
-                                 which the section’s first byte should reside. Otherwise, the member contains 0. */
+                                 which the section's first byte should reside. Otherwise, the member contains 0. */
     Elf32_Off   sh_offset;      /*! gives the byte offset from the beginning of the file to the first byte in the section. */
-    Elf32_Word  sh_size;        /*! gives the section’s size in bytes. Unless the section type is SHT_NOBITS, the section occupies
+    Elf32_Word  sh_size;        /*! gives the section's size in bytes. Unless the section type is SHT_NOBITS, the section occupies
                                  sh_size bytes in the file. A section of type SHT_NOBITS may have a non-zero size, but it occupies
                                  no space in the file.*/
     Elf32_Word  sh_link;        /*! holds a section header table index link, whose interpretation depends on the section type,
@@ -156,20 +156,20 @@ typedef struct {
 
 /*
  From <ELF: Executable and Linkable Format, Portable Formats Specification, Version 1.1 > of Tool Interface Standards(TIS) :
- 
- An object file’s section header table lets one locate all the file’s sections. The section header table is an array of Elf32_Shdr
+
+ An object file's section header table lets one locate all the file's sections. The section header table is an array of Elf32_Shdr
  structures as described below (here it is defined above).
- 
- A section header table index is a subscript into this array. The ELF header’s e_shoff member gives the byte offset from the beginning
+
+ A section header table index is a subscript into this array. The ELF header's e_shoff member gives the byte offset from the beginning
  of the file to the sec- tion header table; e_shnum tells how many entries the section header table contains; e_shentsize gives the
  size in bytes of each entry.
- 
+
  Sections contain all information in an object file, except the ELF header, the program header table, and the section header table.
- Moreover, object files’ sections satisfy several conditions.
+ Moreover, object files' sections satisfy several conditions.
  - Every section in an object file has exactly one section header describing it. Section headers may exist that do not have a section.
  - Each section occupies one contiguous (possibly empty) sequence of bytes within a file.
  - Sections in a file may not overlap. No byte in a file resides in more than one section.
- - An object file may have inactive space. The various headers and the sections might not ‘‘cover’’ every byte in an object file.
+ - An object file may have inactive space. The various headers and the sections might not ''cover'' every byte in an object file.
     The contents of the inactive data are unspecified.
  */
 typedef enum {
@@ -297,15 +297,15 @@ typedef enum {
  |  .text          |  SHT_PROGBITS   |  SHT_ALLOC + SHF_EXECINSTR  |
  */
 typedef enum {
-    _bss        = 0,        /*! This section holds uninitialized data that contribute to the program’s memory image. By definition,
+    _bss        = 0,        /*! This section holds uninitialized data that contribute to the program's memory image. By definition,
                              the system initializes the data with zeros when the program begins to run. The section occupies no file
                              space, as indicated by the section type, SHT_NOBITS. */
-    _comment,               /*! This section holds uninitialized data that contribute to the program’s memory image. By definition,
+    _comment,               /*! This section holds uninitialized data that contribute to the program's memory image. By definition,
                              the system initializes the data with zeros when the program begins to run. The section occupies no file
                              space, as indicated by the section type, SHT_NOBITS. */
-    _data, _datal,          /*! These sections hold initialized data that contribute to the program’s memory image. */
+    _data, _datal,          /*! These sections hold initialized data that contribute to the program's memory image. */
     _debug,                 /*! This section holds information for symbolic debugging. The contents are unspecified. */
-    _dynamic,               /*! This section holds dynamic linking information. The section’s attributes will include the SHF_ALLOC
+    _dynamic,               /*! This section holds dynamic linking information. The section's attributes will include the SHF_ALLOC
                              bit. Whether the SHF_WRITE bit is set is processor specific. */
     _dynstr,                /*! This section holds strings needed for dynamic linking, most commonly the strings that represent the
                              names associated with symbol table entries. */
@@ -318,7 +318,7 @@ typedef enum {
                              That is, when a program starts to run, the system arranges to execute the code in this sec- tion before
                              calling the main program entry point  */
     _interp,                /*! This section holds the path name of a program interpreter. If the file has a loadable seg- ment that
-                             includes the section, the section’s attributes will include the SHF_ALLOC bit; otherwise, that bit will
+                             includes the section, the section's attributes will include the SHF_ALLOC bit; otherwise, that bit will
                              be off.  */
     _line,                  /*! This section holds line number information for symbolic debugging, which describes the correspondence
                              between the source program and the machine code. The contents are unspecified. */
@@ -329,10 +329,10 @@ typedef enum {
                              image. */
     _shstrtab,              /*! This section holds section names. */
     _strtab,                /*! This section holds strings, most commonly the strings that represent the names associated with symbol
-                             table entries. If the file has a loadable segment that includes the symbol string table, the section’s
+                             table entries. If the file has a loadable segment that includes the symbol string table, the section's
                              attributes will include the SHF_ALLOC bit; otherwise, that bit will be off. */
-    _symtab,                /*! This section holds a symbol table, as ‘‘Symbol Table’’ in this section describes. If the file has a
-                             loadable segment that includes the symbol table, the section’s attributes will include the SHF_ALLOC bit;
+    _symtab,                /*! This section holds a symbol table, as ''Symbol Table'' in this section describes. If the file has a
+                             loadable segment that includes the symbol table, the section's attributes will include the SHF_ALLOC bit;
                              otherwise, that bit will be off. */
     _text,                  /*! executable instructions, of a program. */
     _sdata, _sbss, _lit8, _gptab, _conflict, _tdesc, _lit4, _reginfo, _liblist  /*! Pre-existing Extensions */
@@ -341,14 +341,14 @@ typedef enum {
 // MARK: Symbol Table
 /// Symbol Table
 typedef struct {
-    Elf32_Word      st_name;    /*! This member holds an index into the object file’s symbol string table, which holds the character
+    Elf32_Word      st_name;    /*! This member holds an index into the object file's symbol string table, which holds the character
                                  representations of the symbol names. If the value is non-zero, it represents a string table index
                                  that gives the symbol name. Otherwise, the symbol table entry has no name. */
     Elf32_Addr      st_value;   /*! This member gives the value of the associated symbol. */
     Elf32_Word      st_size;    /*! This member gives the size of the symbol. */
     unsigned char   st_info;    /*! The high 4 bits are for Symbol Binding and the low 4 bits are for Symbol Type. */
     unsigned char   st_other;   /*! This member currently holds 0 and has no defined meaning. */
-    Elf32_Half      st_shndx;   /*! Every symbol table entry is ‘‘defined’’ in relation to some section; this member holds the
+    Elf32_Half      st_shndx;   /*! Every symbol table entry is ''defined'' in relation to some section; this member holds the
                                  relevant section header table index. */
 } Elf32_Sym;
 
@@ -378,7 +378,7 @@ typedef enum {
     STT_OBJECT  = 1,    /*! Data object, such as a variable, an array, etc. */
     STT_FUNC    = 2,    /*! A function or other executable code. */
     STT_SECTION = 3,    /*! For relocation. */
-    STT_FILE    = 4,    /*! Conventionally, the symbol’s name gives the name of the source file associated with the object file.
+    STT_FILE    = 4,    /*! Conventionally, the symbol's name gives the name of the source file associated with the object file.
                          A file symbol has STB_LOCAL binding, its section index is SHN_ABS, and it precedes the other STB_LOCAL
                          symbols for the file, if it is present. */
     STT_LOPROC  = 13,   /*! Reserved for processor semantics. */
@@ -416,18 +416,18 @@ typedef struct {
 
 // MARK:- Program Header
 /*
- An executable or shared object file’s program header table is an array of structures, each describing a seg- ment or other
+ An executable or shared object file's program header table is an array of structures, each describing a seg- ment or other
  information the system needs to prepare the program for execution. An object file segment contains one or more sections, as
- ‘Segment Contents’ describes below. Program headers are meaningful only for executable and shared object files. A file specifies
- its own program header size with the ELF header’s e_phentsize and e_phnum members
+ 'Segment Contents' describes below. Program headers are meaningful only for executable and shared object files. A file specifies
+ its own program header size with the ELF header's e_phentsize and e_phnum members
  */
 typedef struct {
     Elf32_Word  p_type;     /*! This member tells what kind of segment this array element describes or how to interpret the array
-                             element’s information.  */
+                             element's information.  */
     Elf32_Off   p_offset;   /*! This member gives the offset from the beginning of the file at which the first byte of the segment
                              resides. */
     Elf32_Addr  p_vaddr;    /*! This member gives the virtual address at which the first byte of the segment resides in memory. */
-    Elf32_Addr  p_paddr;    /*! On systems for which physical addressing is relevant, this member is reserved for the segment’s
+    Elf32_Addr  p_paddr;    /*! On systems for which physical addressing is relevant, this member is reserved for the segment's
                              physical address. Because System V ignores physical addressing for applica- tion programs, this member
                              has unspecified contents for executable files and shared objects. */
     Elf32_Word  p_filesz;   /*! This member gives the number of bytes in the file image of the segment; it may be zero. */
@@ -438,7 +438,7 @@ typedef struct {
 } Elf32_Phdr;
 
 typedef enum {
-    PT_NULL     = 0,            /*! The array element is unused; other members’ values are undefined. This type lets the program
+    PT_NULL     = 0,            /*! The array element is unused; other members' values are undefined. This type lets the program
                                  header table have ignored entries. */
     PT_LOAD     = 1,            /*! The array element specifies a loadable segment, described by p_filesz and p_memsz. */
     PT_DYNAMIC  = 2,            /*! The array element specifies dynamic linking information. */
@@ -480,7 +480,7 @@ static const unsigned char MAGIC_NUMBER[] = {0x7f,'E','L','F'};
 
 /**
  Tell if the file in the buffer is an ELF file.
- 
+
  @param elf the buffer containing the submitted file.
  @return true for an ELF file, false for a non-ELF file.
  */
@@ -491,7 +491,7 @@ static inline bool Elf_Reader_isElfFile(ELF_T elf)
 
 /**
  Read and check the class of the ELF file. Assert an error if the class is unknown.
- 
+
  @param header the ELF file header.
  @return The class of the ELF file. #ELFCLASSNONE, #ELFCLASS32 or #ELFCLASS64.
  */
@@ -507,7 +507,7 @@ static inline EI_CLASS_T Elf_Reader_elfFileClass(const Elf32_Ehdr* header)
 
 /**
  Read an check the data encoding type of the ELF file. Assert an error if the class is unknown.
- 
+
  @param header the ELF file header.
  @return The data encoding type of the ELF file. #ELFDATANONE, #ELFDATA2LSB, or #ELFDATA2MSB.
  */

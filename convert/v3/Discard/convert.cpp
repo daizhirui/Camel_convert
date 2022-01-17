@@ -22,22 +22,22 @@ CamelConvert::CamelConvert(ELF_T elf,
     this->elf = elf;
     this->chip = chip;
     this->binary = binary_t();
-    
+
     this->entryAddress = targetAddress;
     this->targetAddress = targetAddress;
     this->shouldCheckTargetAddress = shouldCheckTargetAddress;
     this->entryAddress_offset = this->entryAddress - CamelConvert::DEFAULT_TARGET_ADDRESS;
     this->dataAddress = dataAddress;
     this->shouldCheckDataAddress = shouldCheckDataAddress;
-    
+
     this->p1_stack_size = p1_stack_size;
-    
+
     for (int i = 0; i < CORE_NUM_MAX; i++) {
         this->main_address[i] = 0;
         this->isr_address[i] = 0;
         this->interrupt_address[i] = 0;
     }
-    
+
     this->binary.code_buf = nullptr;
     this->binary.code_buf_size = 0;
     this->binary.code_section_addr = CamelConvert::DEFAULT_TARGET_ADDRESS;
@@ -45,11 +45,11 @@ CamelConvert::CamelConvert(ELF_T elf,
     this->binary.rodata_buf = nullptr;
     this->binary.rodata_buf_size = 0;
     this->binary.rodata_section_addr = CamelConvert::DEFAULT_TARGET_ADDRESS;
-    
+
     this->binary.eh_frame_buf = nullptr;
     this->binary.eh_frame_buf_size = 0;
     this->binary.eh_frame_section_addr = CamelConvert::DEFAULT_TARGET_ADDRESS;
-    
+
     this->binary.init_array_buf = nullptr;
     this->binary.init_array_buf_size = 0;
     this->binary.init_array_section_addr = CamelConvert::DEFAULT_TARGET_ADDRESS;
@@ -127,17 +127,17 @@ void CamelConvert::updateCode()
 void CamelConvert::convertToBin()
 {
     for (uint32_t i = 0; i < this->elf.sectionHeaderNum; i++) {
-        
+
         Elf32_Shdr  *section = this->elf.sectionsHeaders[i];
         char        *sectionName = (char*)this->elf.strTable + section->sh_name;
-        
+
         if (!strcmp(sectionName, CamelConvert::INSTR_CODE_SECTION_NAME)) {  // check ".text" section
-            
+
             this->binary.code_buf_size = section->sh_size;
             this->binary.code_section_addr = section->sh_addr;              // targetAddress from the elf
             uint8_t* elfCodeBufPtr = this->elf.buf + section->sh_offset;
             this->entryAddress = this->elf.fileHeader->e_entry;             // entryAddress ==> actual entrance address in Linux
-            
+
             if (this->extractSections) {
                 std::string fileName = this->outputFileName + ".bin";
                 verbose("Extract .text section, save it as %s ...\n", fileName.c_str());
@@ -146,7 +146,7 @@ void CamelConvert::convertToBin()
                 fwrite(elfCodeBufPtr, sizeof(uint8_t), section->sh_size, file);
                 fclose(file);
                 file = nullptr;
-                
+
                 std::string textFileName = this->outputFileName + ".txt";
                 verbose("Generate file: %s ...\n", textFileName.c_str());
                 FILE*   textFilePtr = fopen(textFileName.c_str(), "w");
@@ -156,10 +156,10 @@ void CamelConvert::convertToBin()
                 }
                 fclose(textFilePtr);
                 textFilePtr = nullptr;
-                
+
                 continue;   // don't generate a runable binary by updating $gp and $sp!
             }
-            
+
             // this->binary.code_section_addr ==> targetAddress
             // compare targetAddress in the elf with targetAddress from the command line
             if (this->shouldCheckTargetAddress && this->binary.code_section_addr != this->targetAddress) {
@@ -188,11 +188,11 @@ void CamelConvert::convertToBin()
                     exit(EXIT_FAILURE);
                 }
             }
-            
+
             // prepare the memory for code_buf
             this->binary.code_buf = (uint8_t*)malloc(this->binary.code_buf_size * sizeof(uint8_t));
             memset(this->binary.code_buf, 0, this->binary.code_buf_size);
-            
+
             // store the code section
             if (this->entryAddress_offset) {
                 // copy the loader from code section directly!
@@ -200,7 +200,7 @@ void CamelConvert::convertToBin()
                 memcpy(this->binary.code_buf,
                        elfCodeBufPtr + (this->entryAddress - this->targetAddress),    // ptr to the loader
                        CamelConvert::LOADER_SIZE[this->chip] * sizeof(uint32_t));
-                
+
                 if (__verbose__) {
                     printf("Insert user bootloader! Code:\n");
                     for (uint32_t i = 0; i < CamelConvert::LOADER_SIZE[this->chip] * sizeof(uint32_t); i += sizeof(uint32_t)) {
@@ -216,7 +216,7 @@ void CamelConvert::convertToBin()
                 }
             }
             memcpy(this->binary.code_buf + this->entryAddress_offset, elfCodeBufPtr, section->sh_size);
-            
+
             // calculate a series of addresses
             uint32_t address = 0;
             uint32_t code = 0;
@@ -225,11 +225,11 @@ void CamelConvert::convertToBin()
                 address = entryAddress + CamelConvert::JALOS_ADDRESS_OFFSET[this->chip][i];
                 code = *(uint32_t*)(elfCodeBufPtr + address - this->targetAddress);
                 this->main_address[i] = CamelConvert::jalTarget(code, address);
-                
+
                 address = entryAddress + CamelConvert::JISR_ADDRESS_OFFSET[this->chip][i];
                 code = *(uint32_t*)(elfCodeBufPtr + address - this->targetAddress);
                 this->isr_address[i] = CamelConvert::jTarget(code, address);
-                
+
                 address = this->isr_address[i] + CamelConvert::JAL_INTERRUPT_ADDRESS_OFFSET[this->chip][i];
                 code = *(uint32_t*)(elfCodeBufPtr + address - this->targetAddress);
                 this->interrupt_address[i] = CamelConvert::jalTarget(code, address);
@@ -246,13 +246,13 @@ void CamelConvert::convertToBin()
                 }
                 printf("\nSize of instruction code:  %d(0x%08x)(bytes)\n", this->binary.code_buf_size, this->binary.code_buf_size);
             }
-            
+
         } else if (!strcmp(sectionName, CamelConvert::DATA_SECTION_NAME)) {
             this->binary.data_buf_size = section->sh_size;
             this->binary.data_memory_addr = section->sh_addr;
             this->binary.data_buf = (uint8_t*)malloc(this->binary.data_buf_size * sizeof(uint8_t));
             memcpy(this->binary.data_buf, elf.buf + section->sh_offset, this->binary.data_buf_size);
-            
+
             if (this->extractSections) {
                 std::string fileName = this->outputFileName + "_data.bin";
                 verbose("Extract .data section, save it as %s ...\n", fileName.c_str());
@@ -261,7 +261,7 @@ void CamelConvert::convertToBin()
                 fwrite(this->binary.data_buf, sizeof(uint8_t), section->sh_size, file);
                 fclose(file);
                 file = nullptr;
-                
+
                 std::string dataTextFileName = this->outputFileName + "_data.txt";
                 verbose("Generate file: %s ...\n", dataTextFileName.c_str());
                 FILE*   dataTextFilePtr = fopen(dataTextFileName.c_str(), "w");
@@ -271,12 +271,12 @@ void CamelConvert::convertToBin()
                 }
                 fclose(dataTextFilePtr);
                 dataTextFilePtr = nullptr;
-                
+
                 continue;
             }
-            
+
         } else if (!strcmp(sectionName, CamelConvert::RODATA_SECTION_NAME)) {
-            
+
             this->binary.rodata_buf_size = section->sh_size;
             this->binary.rodata_section_addr = section->sh_addr;
             this->binary.rodata_buf = (uint8_t*)malloc(this->binary.rodata_buf_size * sizeof(uint8_t));
@@ -286,7 +286,7 @@ void CamelConvert::convertToBin()
                 printf("\t Address in flash:   0x%08x\n", this->binary.rodata_section_addr);
                 printf("\t             Size:   %d(0x%x)(bytes)\n", this->binary.rodata_buf_size, this->binary.rodata_buf_size);
             }
-            
+
             if (this->extractSections) {
                 std::string fileName = this->outputFileName + "_rodata.bin";
                 verbose("Extract .rodata section, save it as %s ...\n", fileName.c_str());
@@ -295,7 +295,7 @@ void CamelConvert::convertToBin()
                 fwrite(this->binary.rodata_buf, sizeof(uint8_t), this->binary.rodata_buf_size, file);
                 fclose(file);
                 file = nullptr;
-                
+
                 std::string rodataTextFileName = this->outputFileName + "_rodata.txt";
                 verbose("Generate file: %s ...\n", rodataTextFileName.c_str());
                 FILE*   rodataTextFilePtr = fopen(rodataTextFileName.c_str(), "w");
@@ -305,12 +305,12 @@ void CamelConvert::convertToBin()
                 }
                 fclose(rodataTextFilePtr);
                 rodataTextFilePtr = nullptr;
-                
+
                 continue;
             }
-            
+
         } else if (!strcmp(sectionName, CamelConvert::EH_FRAME_SECTION_NAME)){
-            
+
             this->binary.eh_frame_buf_size = section->sh_size;
             this->binary.eh_frame_section_addr = section->sh_addr;
             this->binary.eh_frame_buf = (uint8_t*)malloc(this->binary.eh_frame_buf_size * sizeof(uint8_t));
@@ -320,7 +320,7 @@ void CamelConvert::convertToBin()
                 printf("\t Address in flash:   0x%08x\n", this->binary.eh_frame_section_addr);
                 printf("\t             Size:   %d(0x%x)(bytes)\n", this->binary.eh_frame_buf_size, this->binary.eh_frame_buf_size);
             }
-            
+
             if (this->extractSections) {
                 std::string fileName = this->outputFileName + "_eh_frame.bin";
                 verbose("Extract .eh_frame section, save it as %s ...\n", fileName.c_str());
@@ -332,7 +332,7 @@ void CamelConvert::convertToBin()
                 continue;
             }
         } else if (!strcmp(sectionName, CamelConvert::INIT_ARRAY_SECTION_NAME)) {
-            
+
             this->binary.init_array_buf_size = section->sh_size;
             this->binary.init_array_section_addr = section->sh_addr;
             this->binary.init_array_buf = (uint8_t*)malloc(this->binary.init_array_buf_size * sizeof(uint8_t));
@@ -342,7 +342,7 @@ void CamelConvert::convertToBin()
                 printf("\t Address in flash:   0x%08x\n", this->binary.init_array_section_addr);
                 printf("\t             Size:   %d(0x%x)(bytes)\n", this->binary.init_array_buf_size, this->binary.init_array_buf_size);
             }
-            
+
             if (this->extractSections) {
                 std::string fileName = this->outputFileName + "_init_array.bin";
                 verbose("Extract .init_array section, save it as %s ...\n", fileName.c_str());
@@ -353,9 +353,9 @@ void CamelConvert::convertToBin()
                 file = nullptr;
                 continue;
             }
-            
+
         } else if (!strcmp(sectionName, CamelConvert::BSS_SECTION_NAME)) {
-            
+
             this->binary.bss_begin_addr = section->sh_addr;
             this->binary.bss_size = section->sh_size;
             this->binary.bss_end_addr = this->binary.bss_begin_addr + this->binary.bss_size;
@@ -366,27 +366,27 @@ void CamelConvert::convertToBin()
             }
         }
     }
-    
+
     if (this->extractSections) {
         return; // just extract sections
     }
-    
+
     //// calculate .data section addrs
     this->binary.data_flash_begin_addr = CamelConvert::DEFAULT_TARGET_ADDRESS + this->binary.code_buf_size + this->binary.rodata_buf_size;
     this->binary.data_flash_end_addr = this->binary.data_flash_begin_addr + this->binary.data_buf_size;
-    
+
     if (__verbose__ && this->binary.data_buf != nullptr) {
         printf("\nDetect data section:\n");
         printf("\t Address in memory:   0x%08x\n", this->binary.data_memory_addr);
         printf("\t  Address in flash:   0x%08x\n", this->binary.data_flash_begin_addr);
         printf("\t              Size:   %d(bytes)\n", this->binary.data_buf_size);
     }
-    
+
     //// extract GP
     for (int i = 0; i < CamelConvert::CORE_NUM[this->chip]; i++) {
         this->binary.global_pointer_addr[i] = this->elf.regInfo->ri_gp_value;   // all cores share the same global area!
     }
-    
+
     //// calculate SP
     // p0 sp
     uint32_t offset = MASTER_CORE_GPSP_SIZE + (SLAVE_CORE_GPSP_SIZE + SLAVE_FUNC_EXCHANGE_SIZE) * (CORE_NUM[this->chip] - 1);
@@ -396,7 +396,7 @@ void CamelConvert::convertToBin()
     for (int i = 1; i < CORE_NUM[this->chip]; i++) {
         this->binary.stack_pointer_addr[i] = SRAM_ADDRESS_MIN + globalAreaSize + i * this->p1_stack_size * STACK_PAGE_VOLUME;
     }
-    
+
     if (__verbose__) {
         printf("\nGlobal Pointer of %d core(s):  0x%08x\n", CORE_NUM[this->chip], this->binary.global_pointer_addr[0]);
         for (int i = 0; i < CORE_NUM[this->chip]; i++) {
@@ -440,7 +440,7 @@ void CamelConvert::saveBin()
             printf("\t%d '0' are appended to the binary file!\n", remnant);
         }
     }
-    
+
     // binary txt
     std::string bintextFileName = this->outputFileName + ".txt";
     verbose("Generate file: %s ...\n", bintextFileName.c_str());
@@ -467,7 +467,7 @@ void CamelConvert::saveBin()
     }
     fclose(bintextFilePtr);
     bintextFilePtr = nullptr;
-    
+
     // rodata bin txt
     if (this->binary.rodata_buf != nullptr) {
         std::string rodataBinFileName = this->outputFileName + "_rodata.bin";
@@ -477,7 +477,7 @@ void CamelConvert::saveBin()
         fwrite(this->binary.rodata_buf, this->binary.rodata_buf_size, 1, rodataFilePtr);
         fclose(rodataFilePtr);
         rodataFilePtr = nullptr;
-        
+
         std::string rodataTextFileName = this->outputFileName + "_rodata.txt";
         verbose("Generate file: %s ...\n", rodataTextFileName.c_str());
         FILE*   rodataTextFilePtr = fopen(rodataTextFileName.c_str(), "w");
@@ -492,7 +492,7 @@ void CamelConvert::saveBin()
         fclose(rodataTextFilePtr);
         rodataTextFilePtr = nullptr;
     }
-    
+
     // data bin txt
     if (this->binary.data_buf != nullptr) {
         std::string dataBinFileName = this->outputFileName + "_data.bin";
@@ -502,7 +502,7 @@ void CamelConvert::saveBin()
         fwrite(this->binary.data_buf, this->binary.data_buf_size, 1, dataFilePtr);
         fclose(dataFilePtr);
         dataFilePtr = nullptr;
-        
+
         std::string dataTextFileName = this->outputFileName + "_data.txt";
         verbose("Generate file: %s ...\n", dataTextFileName.c_str());
         FILE*   dataTextFilePtr = fopen(dataTextFileName.c_str(), "w");
@@ -514,7 +514,7 @@ void CamelConvert::saveBin()
         fclose(dataTextFilePtr);
         dataTextFilePtr = nullptr;
     }
-    
+
     // coe file
     std::string coeFileName = this->outputFileName + ".coe";
     verbose("Generate file: %s ...\n", coeFileName.c_str());
@@ -527,6 +527,3 @@ void CamelConvert::saveBin()
     fclose(coeFilePtr);
     coeFilePtr = nullptr;
 }
-
-
-

@@ -1,0 +1,42 @@
+CC = gcc
+CC_FLAGS = -O2 -std=c99
+CXX = g++
+CXX_FLAGS = -O2 -std=c++11
+
+RELEASE_DIR=../release/$(shell uname)
+ELF_READER_SRC_DIR=../elf_reader
+ELF_READER_LIB_SRC=$(ELF_READER_SRC_DIR)/elf.c
+ELF_READER_LIB_OBJ=$(ELF_READER_LIB_SRC:%.c=%.o)
+
+all: pre elf_reader convert convert_v2 final
+
+pre:
+	@mkdir -p $(RELEASE_DIR)
+	@mkdir -p $(RELEASE_DIR)/v2
+
+final:
+	@rm $(ELF_READER_LIB_OBJ)
+
+elf_reader:
+	$(CC) -O2 -std=c99 -c -o $(ELF_READER_LIB_OBJ) $(ELF_READER_LIB_SRC)
+	$(CC) -O2 -std=c99 -o $(RELEASE_DIR)/elf_reader $(ELF_READER_LIB_OBJ) $(ELF_READER_SRC_DIR)/main.c
+
+SRC_DIR=../convert
+
+SRC_V3_DIR=$(SRC_DIR)/v3
+SRC_V3=Binary.cpp param.cpp myDebug.cpp main.cpp
+SRC_V3_PATH=$(SRC_V3:%=$(SRC_V3_DIR)/%)
+
+convert:
+	$(CXX) $(CXX_FLAGS) -o $(RELEASE_DIR)/convert $(SRC_V3_PATH) $(ELF_READER_LIB_OBJ) -I $(ELF_READER_SRC_DIR) -I $(SRC_V3_DIR)
+
+SRC_V2_DIR=$(SRC_DIR)/v2
+SRC_V2=convert.c main.c
+SRC_V2_PATH=$(SRC_V2:%=$(SRC_V2_DIR)/%)
+
+convert_v2:
+	$(CC) $(CC_FLAGS) -o $(RELEASE_DIR)/v2/convert $(SRC_V2_PATH) $(ELF_READER_LIB_OBJ) -I $(ELF_READER_SRC_DIR) -I $(SRC_V2_DIR)
+
+test:
+	../release/convert -m -v ../test/Hello_O0;
+	../release/convert -m -v ../test/Hello_O2
